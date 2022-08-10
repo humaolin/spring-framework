@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2022 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,11 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.lang.Nullable;
 
 /**
- * Common interface for classes that can access named properties
- * (such as bean properties of an object or fields in an object).
+ * 访问定义的属性的通用接口
  *
- * <p>Serves as base interface for {@link BeanWrapper}.
+ * Common interface for classes that can access named properties
+ * (such as bean properties of an object or fields in an object)
+ * Serves as base interface for {@link BeanWrapper}.
  *
  * @author Juergen Hoeller
  * @since 1.1
@@ -36,6 +37,8 @@ import org.springframework.lang.Nullable;
 public interface PropertyAccessor {
 
 	/**
+	 * 嵌套属性的路径分隔符
+	 *
 	 * Path separator for nested properties.
 	 * Follows normal Java conventions: getFoo().getBar() would be "foo.bar".
 	 */
@@ -48,6 +51,8 @@ public interface PropertyAccessor {
 	char NESTED_PROPERTY_SEPARATOR_CHAR = '.';
 
 	/**
+	 * 标记，用来指示属性键的开始
+	 *
 	 * Marker that indicates the start of a property key for an
 	 * indexed or mapped property like "person.addresses[0]".
 	 */
@@ -60,6 +65,8 @@ public interface PropertyAccessor {
 	char PROPERTY_KEY_PREFIX_CHAR = '[';
 
 	/**
+	 * 标记，用来指示属性键的结尾
+	 *
 	 * Marker that indicates the end of a property key for an
 	 * indexed or mapped property like "person.addresses[0]".
 	 */
@@ -73,6 +80,8 @@ public interface PropertyAccessor {
 
 
 	/**
+	 * 确定指定的属性是否可读
+	 *
 	 * Determine whether the specified property is readable.
 	 * <p>Returns {@code false} if the property doesn't exist.
 	 * @param propertyName the property to check
@@ -82,6 +91,8 @@ public interface PropertyAccessor {
 	boolean isReadableProperty(String propertyName);
 
 	/**
+	 * 确定指定的属性是否可写
+	 *
 	 * Determine whether the specified property is writable.
 	 * <p>Returns {@code false} if the property doesn't exist.
 	 * @param propertyName the property to check
@@ -91,6 +102,8 @@ public interface PropertyAccessor {
 	boolean isWritableProperty(String propertyName);
 
 	/**
+	 * 通过检查属性的相关描述或者值来确定指定属性的属性类型
+	 *
 	 * Determine the property type for the specified property,
 	 * either checking the property descriptor or checking the value
 	 * in case of an indexed or mapped element.

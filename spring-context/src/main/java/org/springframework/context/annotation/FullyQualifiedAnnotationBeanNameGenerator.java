@@ -20,6 +20,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.util.Assert;
 
 /**
+ * 类的全限定名作为bean的默认生成策略
+ *
  * An extension of {@code AnnotationBeanNameGenerator} that uses the fully qualified
  * class name as the default bean name if an explicit bean name is not supplied via
  * a supported type-level annotation such as {@code @Component} (see
@@ -42,15 +44,6 @@ import org.springframework.util.Assert;
  * @see ConfigurationClassPostProcessor#IMPORT_BEAN_NAME_GENERATOR
  */
 public class FullyQualifiedAnnotationBeanNameGenerator extends AnnotationBeanNameGenerator {
-
-	/**
-	 * A convenient constant for a default {@code FullyQualifiedAnnotationBeanNameGenerator}
-	 * instance, as used for configuration-level import purposes.
-	 * @since 5.2.11
-	 */
-	public static final FullyQualifiedAnnotationBeanNameGenerator INSTANCE =
-			new FullyQualifiedAnnotationBeanNameGenerator();
-
 
 	@Override
 	protected String buildDefaultBeanName(BeanDefinition definition) {

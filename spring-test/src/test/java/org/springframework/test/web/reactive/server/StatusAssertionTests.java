@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Unit tests for {@link StatusAssertions}.
- *
  * @author Rossen Stoyanchev
  */
 public class StatusAssertionTests {
@@ -56,7 +55,7 @@ public class StatusAssertionTests {
 				assertions.isEqualTo(408));
 	}
 
-	@Test  // gh-23630
+	@Test // gh-23630
 	public void isEqualToWithCustomStatus() {
 		statusAssertions(600).isEqualTo(600);
 	}
@@ -74,19 +73,20 @@ public class StatusAssertionTests {
 	}
 
 	@Test
-	public void statusSeries1xx() {
+	public void statusSerius1xx() {
 		StatusAssertions assertions = statusAssertions(HttpStatus.CONTINUE);
 
 		// Success
 		assertions.is1xxInformational();
 
 		// Wrong series
+
 		assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->
 				assertions.is2xxSuccessful());
 	}
 
 	@Test
-	public void statusSeries2xx() {
+	public void statusSerius2xx() {
 		StatusAssertions assertions = statusAssertions(HttpStatus.OK);
 
 		// Success
@@ -98,7 +98,7 @@ public class StatusAssertionTests {
 	}
 
 	@Test
-	public void statusSeries3xx() {
+	public void statusSerius3xx() {
 		StatusAssertions assertions = statusAssertions(HttpStatus.PERMANENT_REDIRECT);
 
 		// Success
@@ -110,7 +110,7 @@ public class StatusAssertionTests {
 	}
 
 	@Test
-	public void statusSeries4xx() {
+	public void statusSerius4xx() {
 		StatusAssertions assertions = statusAssertions(HttpStatus.BAD_REQUEST);
 
 		// Success
@@ -122,7 +122,7 @@ public class StatusAssertionTests {
 	}
 
 	@Test
-	public void statusSeries5xx() {
+	public void statusSerius5xx() {
 		StatusAssertions assertions = statusAssertions(HttpStatus.INTERNAL_SERVER_ERROR);
 
 		// Success
@@ -134,7 +134,7 @@ public class StatusAssertionTests {
 	}
 
 	@Test
-	public void matchesStatusValue() {
+	public void matches() {
 		StatusAssertions assertions = statusAssertions(HttpStatus.CONFLICT);
 
 		// Success
@@ -144,11 +144,6 @@ public class StatusAssertionTests {
 		// Wrong status
 		assertThatExceptionOfType(AssertionError.class).isThrownBy(() ->
 				assertions.value(equalTo(200)));
-	}
-
-	@Test  // gh-26658
-	public void matchesCustomStatusValue() {
-		statusAssertions(600).value(equalTo(600));
 	}
 
 

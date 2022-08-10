@@ -21,22 +21,26 @@ import java.beans.PropertyEditor;
 import org.springframework.lang.Nullable;
 
 /**
+ * 提供属性编辑器的注册和查找功能
+ *
  * Encapsulates methods for registering JavaBeans {@link PropertyEditor PropertyEditors}.
  * This is the central interface that a {@link PropertyEditorRegistrar} operates on.
  *
  * <p>Extended by {@link BeanWrapper}; implemented by {@link BeanWrapperImpl}
- * and {@link org.springframework.validation.DataBinder}.
+ * and {link org.springframework.validation.DataBinder}.
  *
  * @author Juergen Hoeller
  * @since 1.2.6
  * @see java.beans.PropertyEditor
  * @see PropertyEditorRegistrar
  * @see BeanWrapper
- * @see org.springframework.validation.DataBinder
+ * see org.springframework.validation.DataBinder
  */
 public interface PropertyEditorRegistry {
 
 	/**
+	 * 为给定类型的所有属性注册给定的定制属性编辑器
+	 *
 	 * Register the given custom property editor for all properties of the given type.
 	 * @param requiredType the type of the property
 	 * @param propertyEditor the editor to register
@@ -69,6 +73,8 @@ public interface PropertyEditorRegistry {
 	void registerCustomEditor(@Nullable Class<?> requiredType, @Nullable String propertyPath, PropertyEditor propertyEditor);
 
 	/**
+	 * 查找给定类型和属性的自定义属性编辑器
+	 *
 	 * Find a custom property editor for the given type and property.
 	 * @param requiredType the type of the property (can be {@code null} if a property
 	 * is given but should be specified in any case for consistency checking)

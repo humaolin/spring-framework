@@ -25,6 +25,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
+ * 对AttributeAccessor接口的抽象实现，定义了一个map来存放名字和属性的映射关系
+ *
  * Support class for {@link AttributeAccessor AttributeAccessors}, providing
  * a base implementation of all methods. To be extended by subclasses.
  *
@@ -37,10 +39,19 @@ import org.springframework.util.StringUtils;
 @SuppressWarnings("serial")
 public abstract class AttributeAccessorSupport implements AttributeAccessor, Serializable {
 
-	/** Map with String keys and Object values. */
+	/**
+	 * 名字和属性的对应属性
+	 *
+	 * Map with String keys and Object values. */
 	private final Map<String, Object> attributes = new LinkedHashMap<>();
 
 
+	/**
+	 * 设置null就会删除
+	 *
+	 * @param name the unique attribute key
+	 * @param value the attribute value to be attached
+	 */
 	@Override
 	public void setAttribute(String name, @Nullable Object value) {
 		Assert.notNull(name, "Name must not be null");
@@ -52,6 +63,11 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 		}
 	}
 
+	/**
+	 * 获取属性值
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Object getAttribute(String name) {
@@ -59,6 +75,11 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 		return this.attributes.get(name);
 	}
 
+	/**
+	 * 删除属性
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	@Nullable
 	public Object removeAttribute(String name) {
@@ -66,6 +87,11 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 		return this.attributes.remove(name);
 	}
 
+	/**
+	 * 判断是否有属性值
+	 * @param name the unique attribute key
+	 * @return
+	 */
 	@Override
 	public boolean hasAttribute(String name) {
 		Assert.notNull(name, "Name must not be null");
@@ -79,6 +105,8 @@ public abstract class AttributeAccessorSupport implements AttributeAccessor, Ser
 
 
 	/**
+	 * 内部使用，属性值的拷贝
+	 *
 	 * Copy the attributes from the supplied AttributeAccessor to this accessor.
 	 * @param source the AttributeAccessor to copy from
 	 */

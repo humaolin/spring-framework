@@ -24,6 +24,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
+ * SpringAOP自动创建代理对象的工具类
+ *
  * Utilities for auto-proxy aware components.
  * Mainly for internal use within the framework.
  *
@@ -102,6 +104,8 @@ public abstract class AutoProxyUtils {
 	}
 
 	/**
+	 * 设置他的原来的类型
+	 *
 	 * Expose the given target class for the specified bean, if possible.
 	 * @param beanFactory the containing ConfigurableListableBeanFactory
 	 * @param beanName the name of the bean

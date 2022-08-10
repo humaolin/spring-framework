@@ -499,7 +499,6 @@ public class ReflectUtils {
 			ProtectionDomain protectionDomain, Class<?> contextClass) throws Exception {
 
 		Class c = null;
-		Throwable t = THROWABLE;
 
 		// Preferred option: JDK 9+ Lookup.defineClass API if ClassLoader matches
 		if (contextClass != null && contextClass.getClassLoader() == loader &&
@@ -517,7 +516,6 @@ public class ReflectUtils {
 				// in case of plain LinkageError (class already defined)
 				// or IllegalArgumentException (class in different package):
 				// fall through to traditional ClassLoader.defineClass below
-				t = target;
 			}
 			catch (Throwable ex) {
 				throw new CodeGenerationException(ex);
@@ -545,7 +543,6 @@ public class ReflectUtils {
 				if (!ex.getClass().getName().endsWith("InaccessibleObjectException")) {
 					throw new CodeGenerationException(ex);
 				}
-				t = ex;
 			}
 		}
 
@@ -567,7 +564,7 @@ public class ReflectUtils {
 
 		// No defineClass variant available at all?
 		if (c == null) {
-			throw new CodeGenerationException(t);
+			throw new CodeGenerationException(THROWABLE);
 		}
 
 		// Force static initializers to run.

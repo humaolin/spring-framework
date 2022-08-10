@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,33 +49,12 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
  */
 class UriComponentsBuilderTests {
 
-	@Test  // see gh-26453
-	void examplesInReferenceManual() {
-		final String expected = "/hotel%20list/New%20York?q=foo%2Bbar";
-
-		URI uri = UriComponentsBuilder.fromPath("/hotel list/{city}")
-			.queryParam("q", "{q}")
-			.encode()
-			.buildAndExpand("New York", "foo+bar")
-			.toUri();
-		assertThat(uri).asString().isEqualTo(expected);
-
-		uri = UriComponentsBuilder.fromPath("/hotel list/{city}")
-			.queryParam("q", "{q}")
-			.build("New York", "foo+bar");
-		assertThat(uri).asString().isEqualTo(expected);
-
-		uri = UriComponentsBuilder.fromUriString("/hotel list/{city}?q={q}")
-			.build("New York", "foo+bar");
-		assertThat(uri).asString().isEqualTo(expected);
-	}
-
 	@Test
 	void plain() throws URISyntaxException {
 		UriComponentsBuilder builder = UriComponentsBuilder.newInstance();
 		UriComponents result = builder.scheme("https").host("example.com")
-				.path("foo").queryParam("bar").fragment("baz").build();
-
+				.path("foo").queryParam("bar").fragment("baz")
+				.build();
 		assertThat(result.getScheme()).isEqualTo("https");
 		assertThat(result.getHost()).isEqualTo("example.com");
 		assertThat(result.getPath()).isEqualTo("foo");
@@ -112,10 +91,10 @@ class UriComponentsBuilderTests {
 	@Test
 	void fromPath() throws URISyntaxException {
 		UriComponents result = UriComponentsBuilder.fromPath("foo").queryParam("bar").fragment("baz").build();
-
 		assertThat(result.getPath()).isEqualTo("foo");
 		assertThat(result.getQuery()).isEqualTo("bar");
 		assertThat(result.getFragment()).isEqualTo("baz");
+
 		assertThat(result.toUriString()).as("Invalid result URI String").isEqualTo("foo?bar#baz");
 
 		URI expected = new URI("foo?bar#baz");
@@ -132,12 +111,12 @@ class UriComponentsBuilderTests {
 	void fromHierarchicalUri() throws URISyntaxException {
 		URI uri = new URI("https://example.com/foo?bar#baz");
 		UriComponents result = UriComponentsBuilder.fromUri(uri).build();
-
 		assertThat(result.getScheme()).isEqualTo("https");
 		assertThat(result.getHost()).isEqualTo("example.com");
 		assertThat(result.getPath()).isEqualTo("/foo");
 		assertThat(result.getQuery()).isEqualTo("bar");
 		assertThat(result.getFragment()).isEqualTo("baz");
+
 		assertThat(result.toUri()).as("Invalid result URI").isEqualTo(uri);
 	}
 
@@ -145,10 +124,10 @@ class UriComponentsBuilderTests {
 	void fromOpaqueUri() throws URISyntaxException {
 		URI uri = new URI("mailto:foo@bar.com#baz");
 		UriComponents result = UriComponentsBuilder.fromUri(uri).build();
-
 		assertThat(result.getScheme()).isEqualTo("mailto");
 		assertThat(result.getSchemeSpecificPart()).isEqualTo("foo@bar.com");
 		assertThat(result.getFragment()).isEqualTo("baz");
+
 		assertThat(result.toUri()).as("Invalid result URI").isEqualTo(uri);
 	}
 
@@ -627,7 +606,7 @@ class UriComponentsBuilderTests {
 		assertThat(after.getPath()).isEqualTo("/foo/");
 	}
 
-	@Test  // gh-19890
+	@Test // gh-19890
 	void fromHttpRequestWithEmptyScheme() {
 		HttpRequest request = new HttpRequest() {
 			@Override
@@ -875,7 +854,7 @@ class UriComponentsBuilderTests {
 		assertThat(uriComponents.getQueryParams().get("bar").get(0)).isNull();
 	}
 
-	@Test  // gh-24444
+	@Test // gh-24444
 	void opaqueUriDoesNotResetOnNullInput() throws URISyntaxException {
 		URI uri = new URI("urn:ietf:wg:oauth:2.0:oob");
 		UriComponents result = UriComponentsBuilder.fromUri(uri)
@@ -1135,7 +1114,7 @@ class UriComponentsBuilderTests {
 		assertThat(result.toUriString()).isEqualTo("https://example.com/rest/mobile/users/1");
 	}
 
-	@Test  // gh-25737
+	@Test // gh-25737
 	void fromHttpRequestForwardedHeaderComma() {
 		MockHttpServletRequest request = new MockHttpServletRequest();
 		request.addHeader("Forwarded", "for=192.0.2.0,for=192.0.2.1;proto=https;host=192.0.2.3:9090");
@@ -1174,7 +1153,7 @@ class UriComponentsBuilderTests {
 		assertThat(uri).isEqualTo("http://localhost:8081/{path}?sort={sort}&sort=another_value");
 	}
 
-	@Test  // SPR-17630
+	@Test // SPR-17630
 	void toUriStringWithCurlyBraces() {
 		assertThat(UriComponentsBuilder.fromUriString("/path?q={asa}asa").toUriString()).isEqualTo("/path?q=%7Basa%7Dasa");
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,6 +132,7 @@ public class UrlPathHelper {
 	 * Whether configured to remove ";" (semicolon) content from the request URI.
 	 */
 	public boolean shouldRemoveSemicolonContent() {
+		checkReadOnly();
 		return this.removeSemicolonContent;
 	}
 
@@ -521,8 +522,8 @@ public class UrlPathHelper {
 			return UriUtils.decode(source, enc);
 		}
 		catch (UnsupportedCharsetException ex) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Could not decode request string [" + source + "] with encoding '" + enc +
+			if (logger.isWarnEnabled()) {
+				logger.warn("Could not decode request string [" + source + "] with encoding '" + enc +
 						"': falling back to platform default encoding; exception message: " + ex.getMessage());
 			}
 			return URLDecoder.decode(source);
@@ -555,8 +556,7 @@ public class UrlPathHelper {
 	 * @return the updated URI string
 	 */
 	public String removeSemicolonContent(String requestUri) {
-		return (this.removeSemicolonContent ?
-				removeSemicolonContentInternal(requestUri) : removeJsessionid(requestUri));
+		return (this.removeSemicolonContent ? removeSemicolonContentInternal(requestUri) : requestUri);
 	}
 
 	private String removeSemicolonContentInternal(String requestUri) {
@@ -568,22 +568,6 @@ public class UrlPathHelper {
 			semicolonIndex = requestUri.indexOf(';', semicolonIndex);
 		}
 		return requestUri;
-	}
-
-	private String removeJsessionid(String requestUri) {
-		String key = ";jsessionid=";
-		int index = requestUri.toLowerCase().indexOf(key);
-		if (index == -1) {
-			return requestUri;
-		}
-		String start = requestUri.substring(0, index);
-		for (int i = index + key.length(); i < requestUri.length(); i++) {
-			char c = requestUri.charAt(i);
-			if (c == ';' || c == '/') {
-				return start + requestUri.substring(i);
-			}
-		}
-		return start;
 	}
 
 	/**
@@ -691,13 +675,7 @@ public class UrlPathHelper {
 	 * <li>{@code defaultEncoding=}{@link WebUtils#DEFAULT_CHARACTER_ENCODING}
 	 * </ul>
 	 */
-	public static final UrlPathHelper rawPathInstance = new UrlPathHelper() {
-
-		@Override
-		public String removeSemicolonContent(String requestUri) {
-			return requestUri;
-		}
-	};
+	public static final UrlPathHelper rawPathInstance = new UrlPathHelper();
 
 	static {
 		rawPathInstance.setAlwaysUseFullPath(true);

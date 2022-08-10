@@ -40,7 +40,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
-import org.springframework.core.log.LogFormatUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpRange;
@@ -509,16 +508,22 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 
 		// Check the media type for the resource
 		MediaType mediaType = getMediaType(request, resource);
-		setHeaders(response, resource, mediaType);
 
 		// Content phase
+		if (METHOD_HEAD.equals(request.getMethod())) {
+			setHeaders(response, resource, mediaType);
+			return;
+		}
+
 		ServletServerHttpResponse outputMessage = new ServletServerHttpResponse(response);
 		if (request.getHeader(HttpHeaders.RANGE) == null) {
 			Assert.state(this.resourceHttpMessageConverter != null, "Not initialized");
+			setHeaders(response, resource, mediaType);
 			this.resourceHttpMessageConverter.write(resource, mediaType, outputMessage);
 		}
 		else {
 			Assert.state(this.resourceRegionHttpMessageConverter != null, "Not initialized");
+			response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
 			ServletServerHttpRequest inputMessage = new ServletServerHttpRequest(request);
 			try {
 				List<HttpRange> httpRanges = inputMessage.getHeaders().getRange();
@@ -527,7 +532,7 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 						HttpRange.toResourceRegions(httpRanges, resource), mediaType, outputMessage);
 			}
 			catch (IllegalArgumentException ex) {
-				response.setHeader(HttpHeaders.CONTENT_RANGE, "bytes */" + resource.contentLength());
+				response.setHeader("Content-Range", "bytes */" + resource.contentLength());
 				response.sendError(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
 			}
 		}
@@ -663,8 +668,7 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 	protected boolean isInvalidPath(String path) {
 		if (path.contains("WEB-INF") || path.contains("META-INF")) {
 			if (logger.isWarnEnabled()) {
-				logger.warn(LogFormatUtils.formatValue(
-						"Path with \"WEB-INF\" or \"META-INF\": [" + path + "]", -1, true));
+				logger.warn("Path with \"WEB-INF\" or \"META-INF\": [" + path + "]");
 			}
 			return true;
 		}
@@ -672,16 +676,14 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 			String relativePath = (path.charAt(0) == '/' ? path.substring(1) : path);
 			if (ResourceUtils.isUrl(relativePath) || relativePath.startsWith("url:")) {
 				if (logger.isWarnEnabled()) {
-					logger.warn(LogFormatUtils.formatValue(
-							"Path represents URL or has \"url:\" prefix: [" + path + "]", -1, true));
+					logger.warn("Path represents URL or has \"url:\" prefix: [" + path + "]");
 				}
 				return true;
 			}
 		}
 		if (path.contains("..") && StringUtils.cleanPath(path).contains("../")) {
 			if (logger.isWarnEnabled()) {
-				logger.warn(LogFormatUtils.formatValue(
-						"Path contains \"../\" after call to StringUtils#cleanPath: [" + path + "]", -1, true));
+				logger.warn("Path contains \"../\" after call to StringUtils#cleanPath: [" + path + "]");
 			}
 			return true;
 		}
@@ -748,7 +750,6 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 		if (mediaType != null) {
 			response.setContentType(mediaType.toString());
 		}
-
 		if (resource instanceof HttpResource) {
 			HttpHeaders resourceHeaders = ((HttpResource) resource).getResponseHeaders();
 			resourceHeaders.forEach((headerName, headerValues) -> {
@@ -764,7 +765,6 @@ public class ResourceHttpRequestHandler extends WebContentGenerator
 				}
 			});
 		}
-
 		response.setHeader(HttpHeaders.ACCEPT_RANGES, "bytes");
 	}
 

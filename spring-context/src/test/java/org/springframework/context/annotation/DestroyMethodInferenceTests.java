@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.springframework.context.support.GenericXmlApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 /**
  * @author Chris Beams
  * @author Juergen Hoeller
@@ -46,7 +47,6 @@ public class DestroyMethodInferenceTests {
 		WithLocalShutdownMethod c7 = ctx.getBean("c7", WithLocalShutdownMethod.class);
 		WithInheritedCloseMethod c8 = ctx.getBean("c8", WithInheritedCloseMethod.class);
 		WithDisposableBean c9 = ctx.getBean("c9", WithDisposableBean.class);
-		WithAutoCloseable c10 = ctx.getBean("c10", WithAutoCloseable.class);
 
 		assertThat(c0.closed).as("c0").isFalse();
 		assertThat(c1.closed).as("c1").isFalse();
@@ -58,8 +58,6 @@ public class DestroyMethodInferenceTests {
 		assertThat(c7.closed).as("c7").isFalse();
 		assertThat(c8.closed).as("c8").isFalse();
 		assertThat(c9.closed).as("c9").isFalse();
-		assertThat(c10.closed).as("c10").isFalse();
-
 		ctx.close();
 		assertThat(c0.closed).as("c0").isTrue();
 		assertThat(c1.closed).as("c1").isTrue();
@@ -71,7 +69,6 @@ public class DestroyMethodInferenceTests {
 		assertThat(c7.closed).as("c7").isTrue();
 		assertThat(c8.closed).as("c8").isFalse();
 		assertThat(c9.closed).as("c9").isTrue();
-		assertThat(c10.closed).as("c10").isTrue();
 	}
 
 	@Test
@@ -83,29 +80,21 @@ public class DestroyMethodInferenceTests {
 		WithLocalCloseMethod x3 = ctx.getBean("x3", WithLocalCloseMethod.class);
 		WithNoCloseMethod x4 = ctx.getBean("x4", WithNoCloseMethod.class);
 		WithInheritedCloseMethod x8 = ctx.getBean("x8", WithInheritedCloseMethod.class);
-		WithDisposableBean x9 = ctx.getBean("x9", WithDisposableBean.class);
-		WithAutoCloseable x10 = ctx.getBean("x10", WithAutoCloseable.class);
 
 		assertThat(x1.closed).isFalse();
 		assertThat(x2.closed).isFalse();
 		assertThat(x3.closed).isFalse();
 		assertThat(x4.closed).isFalse();
-		assertThat(x8.closed).isFalse();
-		assertThat(x9.closed).isFalse();
-		assertThat(x10.closed).isFalse();
-
 		ctx.close();
 		assertThat(x1.closed).isFalse();
 		assertThat(x2.closed).isTrue();
 		assertThat(x3.closed).isTrue();
 		assertThat(x4.closed).isFalse();
 		assertThat(x8.closed).isFalse();
-		assertThat(x9.closed).isTrue();
-		assertThat(x10.closed).isTrue();
 	}
 
 
-	@Configuration(proxyBeanMethods = false)
+	@Configuration
 	static class Config {
 
 		@Bean(destroyMethod = "explicitClose")
@@ -166,11 +155,6 @@ public class DestroyMethodInferenceTests {
 		public WithDisposableBean c9() {
 			return new WithDisposableBean();
 		}
-
-		@Bean
-		public WithAutoCloseable c10() {
-			return new WithAutoCloseable();
-		}
 	}
 
 
@@ -205,22 +189,6 @@ public class DestroyMethodInferenceTests {
 	}
 
 
-	static class WithNoCloseMethod {
-
-		boolean closed = false;
-	}
-
-
-	static class WithLocalShutdownMethod {
-
-		boolean closed = false;
-
-		public void shutdown() {
-			closed = true;
-		}
-	}
-
-
 	static class WithDisposableBean implements DisposableBean {
 
 		boolean closed = false;
@@ -232,12 +200,17 @@ public class DestroyMethodInferenceTests {
 	}
 
 
-	static class WithAutoCloseable implements AutoCloseable {
+	static class WithNoCloseMethod {
+
+		boolean closed = false;
+	}
+
+
+	static class WithLocalShutdownMethod {
 
 		boolean closed = false;
 
-		@Override
-		public void close() {
+		public void shutdown() {
 			closed = true;
 		}
 	}

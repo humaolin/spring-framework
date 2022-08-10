@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2020 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.Hints;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.core.log.LogFormatUtils;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -353,9 +352,15 @@ public class ResourceWebHandler implements WebHandler, InitializingBean {
 
 						// Check the media type for the resource
 						MediaType mediaType = MediaTypeFactory.getMediaType(resource).orElse(null);
-						setHeaders(exchange, resource, mediaType);
 
 						// Content phase
+						if (HttpMethod.HEAD.matches(exchange.getRequest().getMethodValue())) {
+							setHeaders(exchange, resource, mediaType);
+							exchange.getResponse().getHeaders().set(HttpHeaders.ACCEPT_RANGES, "bytes");
+							return Mono.empty();
+						}
+
+						setHeaders(exchange, resource, mediaType);
 						ResourceHttpMessageWriter writer = getResourceHttpMessageWriter();
 						Assert.state(writer != null, "No ResourceHttpMessageWriter");
 						return writer.write(Mono.just(resource),
@@ -491,8 +496,7 @@ public class ResourceWebHandler implements WebHandler, InitializingBean {
 	protected boolean isInvalidPath(String path) {
 		if (path.contains("WEB-INF") || path.contains("META-INF")) {
 			if (logger.isWarnEnabled()) {
-				logger.warn(LogFormatUtils.formatValue(
-						"Path with \"WEB-INF\" or \"META-INF\": [" + path + "]", -1, true));
+				logger.warn("Path with \"WEB-INF\" or \"META-INF\": [" + path + "]");
 			}
 			return true;
 		}
@@ -500,16 +504,14 @@ public class ResourceWebHandler implements WebHandler, InitializingBean {
 			String relativePath = (path.charAt(0) == '/' ? path.substring(1) : path);
 			if (ResourceUtils.isUrl(relativePath) || relativePath.startsWith("url:")) {
 				if (logger.isWarnEnabled()) {
-					logger.warn(LogFormatUtils.formatValue(
-							"Path represents URL or has \"url:\" prefix: [" + path + "]", -1, true));
+					logger.warn("Path represents URL or has \"url:\" prefix: [" + path + "]");
 				}
 				return true;
 			}
 		}
 		if (path.contains("..") && StringUtils.cleanPath(path).contains("../")) {
 			if (logger.isWarnEnabled()) {
-				logger.warn(LogFormatUtils.formatValue(
-						"Path contains \"../\" after call to StringUtils#cleanPath: [" + path + "]", -1, true));
+				logger.warn("Path contains \"../\" after call to StringUtils#cleanPath: [" + path + "]");
 			}
 			return true;
 		}
@@ -533,7 +535,6 @@ public class ResourceWebHandler implements WebHandler, InitializingBean {
 		if (mediaType != null) {
 			headers.setContentType(mediaType);
 		}
-
 		if (resource instanceof HttpResource) {
 			HttpHeaders resourceHeaders = ((HttpResource) resource).getResponseHeaders();
 			exchange.getResponse().getHeaders().putAll(resourceHeaders);

@@ -18,7 +18,6 @@ package org.springframework.http.converter.json;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
@@ -44,6 +43,7 @@ import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.http.HttpInputMessage;
@@ -56,7 +56,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StreamUtils;
 import org.springframework.util.TypeUtils;
 
 /**
@@ -236,18 +235,18 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 	}
 
 	@Override
-	public Object read(Type type, @Nullable Class<?> contextClass, HttpInputMessage inputMessage)
-			throws IOException, HttpMessageNotReadableException {
-
-		JavaType javaType = getJavaType(type, contextClass);
-		return readJavaType(javaType, inputMessage);
-	}
-
-	@Override
 	protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
 			throws IOException, HttpMessageNotReadableException {
 
 		JavaType javaType = getJavaType(clazz, null);
+		return readJavaType(javaType, inputMessage);
+	}
+
+	@Override
+	public Object read(Type type, @Nullable Class<?> contextClass, HttpInputMessage inputMessage)
+			throws IOException, HttpMessageNotReadableException {
+
+		JavaType javaType = getJavaType(type, contextClass);
 		return readJavaType(javaType, inputMessage);
 	}
 
@@ -309,9 +308,7 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 
 		MediaType contentType = outputMessage.getHeaders().getContentType();
 		JsonEncoding encoding = getJsonEncoding(contentType);
-
-		OutputStream outputStream = StreamUtils.nonClosing(outputMessage.getBody());
-		JsonGenerator generator = this.objectMapper.getFactory().createGenerator(outputStream, encoding);
+		JsonGenerator generator = this.objectMapper.getFactory().createGenerator(outputMessage.getBody(), encoding);
 		try {
 			writePrefix(generator, object);
 
@@ -347,7 +344,6 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 
 			writeSuffix(generator, object);
 			generator.flush();
-			generator.close();
 		}
 		catch (InvalidDefinitionException ex) {
 			throw new HttpMessageConversionException("Type definition error: " + ex.getType(), ex);
@@ -381,7 +377,8 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 	 * @return the Jackson JavaType
 	 */
 	protected JavaType getJavaType(Type type, @Nullable Class<?> contextClass) {
-		return this.objectMapper.constructType(GenericTypeResolver.resolveType(type, contextClass));
+		TypeFactory typeFactory = this.objectMapper.getTypeFactory();
+		return typeFactory.constructType(GenericTypeResolver.resolveType(type, contextClass));
 	}
 
 	/**

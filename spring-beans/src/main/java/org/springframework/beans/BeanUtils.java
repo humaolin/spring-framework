@@ -83,10 +83,7 @@ public abstract class BeanUtils {
 		values.put(byte.class, (byte) 0);
 		values.put(short.class, (short) 0);
 		values.put(int.class, 0);
-		values.put(long.class, 0L);
-		values.put(float.class, 0F);
-		values.put(double.class, 0D);
-		values.put(char.class, '\0');
+		values.put(long.class, (long) 0);
 		DEFAULT_TYPE_VALUES = Collections.unmodifiableMap(values);
 	}
 
@@ -173,6 +170,8 @@ public abstract class BeanUtils {
 	}
 
 	/**
+	 * 调用构造函数实例化
+	 *
 	 * Convenience method to instantiate a class using the given constructor.
 	 * <p>Note that this method tries to set the constructor accessible if given a
 	 * non-accessible (that is, non-public) constructor, and supports Kotlin classes
@@ -195,6 +194,7 @@ public abstract class BeanUtils {
 				Class<?>[] parameterTypes = ctor.getParameterTypes();
 				Assert.isTrue(args.length <= parameterTypes.length, "Can't specify more arguments than constructor parameters");
 				Object[] argsWithDefaultValues = new Object[args.length];
+				//获得参数
 				for (int i = 0 ; i < args.length; i++) {
 					if (args[i] == null) {
 						Class<?> parameterType = parameterTypes[i];
@@ -205,7 +205,7 @@ public abstract class BeanUtils {
 					}
 				}
 				return ctor.newInstance(argsWithDefaultValues);
-			}
+		}
 		}
 		catch (InstantiationException ex) {
 			throw new BeanInstantiationException(ctor, "Is it an abstract class?", ex);
@@ -509,7 +509,6 @@ public abstract class BeanUtils {
 		if (targetType == null || targetType.isArray() || unknownEditorTypes.contains(targetType)) {
 			return null;
 		}
-
 		ClassLoader cl = targetType.getClassLoader();
 		if (cl == null) {
 			try {
@@ -526,34 +525,28 @@ public abstract class BeanUtils {
 				return null;
 			}
 		}
-
 		String targetTypeName = targetType.getName();
 		String editorName = targetTypeName + "Editor";
 		try {
 			Class<?> editorClass = cl.loadClass(editorName);
-			if (editorClass != null) {
-				if (!PropertyEditor.class.isAssignableFrom(editorClass)) {
-					if (logger.isInfoEnabled()) {
-						logger.info("Editor class [" + editorName +
-								"] does not implement [java.beans.PropertyEditor] interface");
-					}
-					unknownEditorTypes.add(targetType);
-					return null;
+			if (!PropertyEditor.class.isAssignableFrom(editorClass)) {
+				if (logger.isInfoEnabled()) {
+					logger.info("Editor class [" + editorName +
+							"] does not implement [java.beans.PropertyEditor] interface");
 				}
-				return (PropertyEditor) instantiateClass(editorClass);
+				unknownEditorTypes.add(targetType);
+				return null;
 			}
-			// Misbehaving ClassLoader returned null instead of ClassNotFoundException
-			// - fall back to unknown editor type registration below
+			return (PropertyEditor) instantiateClass(editorClass);
 		}
 		catch (ClassNotFoundException ex) {
-			// Ignore - fall back to unknown editor type registration below
+			if (logger.isTraceEnabled()) {
+				logger.trace("No property editor [" + editorName + "] found for type " +
+						targetTypeName + " according to 'Editor' suffix convention");
+			}
+			unknownEditorTypes.add(targetType);
+			return null;
 		}
-		if (logger.isTraceEnabled()) {
-			logger.trace("No property editor [" + editorName + "] found for type " +
-					targetTypeName + " according to 'Editor' suffix convention");
-		}
-		unknownEditorTypes.add(targetType);
-		return null;
 	}
 
 	/**
@@ -576,23 +569,34 @@ public abstract class BeanUtils {
 	}
 
 	/**
+	 * 为指定属性的写方法获取一个新的MethodParameter对象
+	 *
 	 * Obtain a new MethodParameter object for the write method of the
 	 * specified property.
 	 * @param pd the PropertyDescriptor for the property
 	 * @return a corresponding MethodParameter object
 	 */
 	public static MethodParameter getWriteMethodParameter(PropertyDescriptor pd) {
+		//GenericTypeAwarePropertyDescriptor:通用属性描述器，用于保存 <property/>中的相关信息(例：属性所属类Class，属性的对应
+		// get/set 方法 Method 对象等)；
+		// 如果pd是 GenericTypeAwarePropertyDescriptor 实例
 		if (pd instanceof GenericTypeAwarePropertyDescriptor) {
+			//返回pd的setter的方法参数包装对象
 			return new MethodParameter(((GenericTypeAwarePropertyDescriptor) pd).getWriteMethodParameter());
 		}
 		else {
+			//获取pd的属性setter方法
 			Method writeMethod = pd.getWriteMethod();
+			//如果writeMethod为null，抛出异常
 			Assert.state(writeMethod != null, "No write method available");
+			//新建一个方法参数包装对象对witerMethodd进行包装，指定该方法的参数为第一个
 			return new MethodParameter(writeMethod, 0);
 		}
 	}
 
 	/**
+	 * 检查给定的类型是否表示 'simple' 属性：简单值类型还是简单值类型数组
+	 *
 	 * Check if the given type represents a "simple" property: a simple value
 	 * type or an array of simple value types.
 	 * <p>See {@link #isSimpleValueType(Class)} for the definition of <em>simple
@@ -601,15 +605,20 @@ public abstract class BeanUtils {
 	 * @param type the type to check
 	 * @return whether the given type represents a "simple" property
 	 * @see org.springframework.beans.factory.support.RootBeanDefinition#DEPENDENCY_CHECK_SIMPLE
-	 * @see org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#checkDependencies
+	 * see org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#checkDependencies
 	 * @see #isSimpleValueType(Class)
 	 */
 	public static boolean isSimpleProperty(Class<?> type) {
+		//如果 type 为null 抛出异常
 		Assert.notNull(type, "'type' must not be null");
+		// 如果type是"简单"值类型 || (type是数组 & type的元素类型是否"简单"值类型) 就为ture；否则为false
 		return isSimpleValueType(type) || (type.isArray() && isSimpleValueType(type.getComponentType()));
 	}
 
 	/**
+	 * 检查给定的类型是否表示 "简单" 值类型: primitive 或者 primitive包装器，枚举，字符串，
+	 * 或 其他字符，数字，日期，时态，URI，URL，语言环境或类
+	 *
 	 * Check if the given type represents a "simple" value type: a primitive or
 	 * primitive wrapper, an enum, a String or other CharSequence, a Number, a
 	 * Date, a Temporal, a URI, a URL, a Locale, or a Class.

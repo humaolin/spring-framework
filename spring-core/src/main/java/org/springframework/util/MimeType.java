@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2020 the original author or authors.
+ * Copyright 2002-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package org.springframework.util;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.BitSet;
@@ -106,9 +104,6 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 	private final Map<String, String> parameters;
 
 	@Nullable
-	private transient Charset resolvedCharset;
-
-	@Nullable
 	private volatile String toStringValue;
 
 
@@ -143,7 +138,6 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 	 */
 	public MimeType(String type, String subtype, Charset charset) {
 		this(type, subtype, Collections.singletonMap(PARAM_CHARSET, charset.name()));
-		this.resolvedCharset = charset;
 	}
 
 	/**
@@ -156,7 +150,6 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 	 */
 	public MimeType(MimeType other, Charset charset) {
 		this(other.getType(), other.getSubtype(), addCharsetParameter(charset, other.getParameters()));
-		this.resolvedCharset = charset;
 	}
 
 	/**
@@ -186,9 +179,9 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 		this.subtype = subtype.toLowerCase(Locale.ENGLISH);
 		if (!CollectionUtils.isEmpty(parameters)) {
 			Map<String, String> map = new LinkedCaseInsensitiveMap<>(parameters.size(), Locale.ENGLISH);
-			parameters.forEach((parameter, value) -> {
-				checkParameters(parameter, value);
-				map.put(parameter, value);
+			parameters.forEach((attribute, value) -> {
+				checkParameters(attribute, value);
+				map.put(attribute, value);
 			});
 			this.parameters = Collections.unmodifiableMap(map);
 		}
@@ -204,7 +197,7 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 	 * @see <a href="https://tools.ietf.org/html/rfc2616#section-2.2">HTTP 1.1, section 2.2</a>
 	 */
 	private void checkToken(String token) {
-		for (int i = 0; i < token.length(); i++) {
+		for (int i = 0; i < token.length(); i++ ) {
 			char ch = token.charAt(i);
 			if (!TOKEN.get(ch)) {
 				throw new IllegalArgumentException("Invalid token character '" + ch + "' in token \"" + token + "\"");
@@ -212,14 +205,13 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 		}
 	}
 
-	protected void checkParameters(String parameter, String value) {
-		Assert.hasLength(parameter, "'parameter' must not be empty");
+	protected void checkParameters(String attribute, String value) {
+		Assert.hasLength(attribute, "'attribute' must not be empty");
 		Assert.hasLength(value, "'value' must not be empty");
-		checkToken(parameter);
-		if (PARAM_CHARSET.equals(parameter)) {
-			if (this.resolvedCharset == null) {
-				this.resolvedCharset = Charset.forName(unquote(value));
-			}
+		checkToken(attribute);
+		if (PARAM_CHARSET.equals(attribute)) {
+			value = unquote(value);
+			Charset.forName(value);
 		}
 		else if (!isQuotedString(value)) {
 			checkToken(value);
@@ -287,7 +279,8 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 	 */
 	@Nullable
 	public Charset getCharset() {
-		return this.resolvedCharset;
+		String charset = getParameter(PARAM_CHARSET);
+		return (charset != null ? Charset.forName(unquote(charset)) : null);
 	}
 
 	/**
@@ -569,17 +562,6 @@ public class MimeType implements Comparable<MimeType>, Serializable {
 		}
 
 		return 0;
-	}
-
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		// Rely on default serialization, just initialize state after deserialization.
-		ois.defaultReadObject();
-
-		// Initialize transient fields.
-		String charsetName = getParameter(PARAM_CHARSET);
-		if (charsetName != null) {
-			this.resolvedCharset = Charset.forName(unquote(charsetName));
-		}
 	}
 
 
