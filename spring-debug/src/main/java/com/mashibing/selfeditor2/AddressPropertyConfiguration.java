@@ -13,7 +13,7 @@ import java.util.Collections;
  * @author dyan
  * @data 2020/12/12
  */
-@Configuration
+//@Configuration
 public class AddressPropertyConfiguration {
 
 //    @Bean
