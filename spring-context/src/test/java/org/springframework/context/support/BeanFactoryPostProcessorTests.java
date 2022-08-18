@@ -83,7 +83,8 @@ public class BeanFactoryPostProcessorTests {
 		pvs1.add("initValue", "${key}");
 		ac.registerSingleton("bfpp1", TestBeanFactoryPostProcessor.class, pvs1);
 		MutablePropertyValues pvs2 = new MutablePropertyValues();
-		pvs2.add("properties", "key=value");
+//		pvs2.add("properties", "key=value");
+		pvs2.add("key", "value");
 		ac.registerSingleton("bfpp2", PropertyPlaceholderConfigurer.class, pvs2);
 		ac.refresh();
 		TestBeanFactoryPostProcessor bfpp = (TestBeanFactoryPostProcessor) ac.getBean("bfpp1");
